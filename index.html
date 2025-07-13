@@ -6,91 +6,100 @@
 <title>7Exporter</title>
 <style>
   body {
-    font-family: monospace, monospace;
-    margin: 2rem;
-    background: white;
-    color: black;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    margin: 2rem auto;
+    max-width: 900px;
+    background: #121212;
+    color: #f0f0f0;
   }
   h1 {
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
+    text-align: center;
+    font-size: 2.2rem;
   }
   button {
     cursor: pointer;
-    padding: 0.4rem 0.8rem;
-    font-weight: bold;
-    border: 1px solid black;
-    background: white;
-    color: black;
-    border-radius: 0;
-    margin: 0.5rem 0;
+    padding: 0.7rem 1.4rem;
+    font-weight: 600;
+    border: none;
+    background: #a9a9a9;
+    color: white;
+    border-radius: 5px;
+    margin: 0.5rem;
+    transition: background 0.2s ease;
   }
   button:hover {
-    background: #eee;
+    background: #1565c0;
   }
   #addFileBtn, #exportBtn {
     display: inline-block;
-    margin-right: 1rem;
   }
   #exportBtn {
     display: none;
   }
 
   .file-list {
-    margin-top: 1.5rem;
+    margin-top: 2rem;
   }
   .file-item {
-    border: 1px solid black;
-    margin-bottom: 1rem;
-    border-radius: 0;
+    border: 1px solid #333;
+    border-radius: 5px;
+    margin-bottom: 1.5rem;
+    background: #1e1e1e;
+    overflow: hidden;
   }
   .file-header {
     display: flex;
     align-items: center;
-    padding: 0.5rem;
-    user-select: none;
-    font-weight: bold;
-    border-bottom: 1px solid black;
+    padding: 0.75rem 1rem;
+    background: #2c2c2c;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
   }
   .file-header input {
+    flex: 1;
     font-family: monospace;
-    font-weight: normal;
     font-size: 1rem;
     border: none;
-    background: white;
-    width: 60%;
-    padding: 0 0.25rem;
+    border-radius: 4px;
+    background: transparent;
+    color: #f0f0f0;
+    padding: 0.4rem 0.6rem;
+    margin-right: 0.75rem;
     outline: none;
+    border-bottom: 1px solid #555;
   }
   .remove-btn {
-    background: white;
-    color: black;
-    border: none;
-    font-weight: normal;
+    background: #e53935;
+    color: white;
+    border-radius: 4px;
+    padding: 0.4rem 0.75rem;
     font-size: 0.9rem;
-    padding: 0 0.5rem;
+    border: none;
     margin-left: 0.5rem;
   }
   .remove-btn:hover {
-    background: #ddd;
+    background: #b71c1c;
   }
-  .toggle-btn {
-    cursor: pointer;
-    user-select: none;
-    font-weight: bold;
+  .toggle-icon {
+    margin-left: 0.5rem;
     font-size: 1.2rem;
-    border: none;
-    background: transparent;
-    color: black;
-    padding: 0 0.5rem;
-    margin-left: auto;
+    user-select: none;
+    transition: transform 0.3s ease;
   }
-  .toggle-btn:hover {
-    background: #eee;
+  .toggle-icon.rotate {
+    transform: rotate(90deg);
   }
+
   .file-content {
-    display: none;
-    padding: 0.5rem;
-    border-top: none;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0 1rem;
+  }
+  .file-content.open {
+    max-height: 1000px;
+    padding: 1rem;
   }
   .file-content textarea {
     width: 100%;
@@ -98,8 +107,11 @@
     font-family: monospace;
     font-size: 14px;
     resize: vertical;
-    border: 1px solid black;
-    padding: 0.5rem;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #0e0e0e;
+    color: #f0f0f0;
+    padding: 0.75rem;
     box-sizing: border-box;
   }
 
@@ -107,35 +119,41 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    background: white;
-    border: 1px solid black;
-    padding: 1.5rem;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 2rem;
     transform: translate(-50%, -50%);
     display: none;
-    width: 320px;
+    width: 360px;
     text-align: center;
-    font-family: monospace;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  }
+  #export-popup h2 {
+    margin-bottom: 1.5rem;
   }
   #export-popup label {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin: 1rem 0;
+    font-size: 1rem;
   }
   #export-popup button {
-    padding: 0.5rem 1rem;
-    border: 1px solid black;
-    background: white;
-    font-weight: bold;
+    margin-top: 1rem;
   }
-  #export-popup button:hover {
-    background: #eee;
+  #cancelExportBtn {
+    background: #6c757d;
   }
+  #cancelExportBtn:hover {
+    background: #545b62;
+  }
+
   #overlay {
     position: fixed;
     display: none;
     top:0; left:0; right:0; bottom:0;
-    background: rgba(0,0,0,0.15);
+    background: rgba(0,0,0,0.5);
   }
 </style>
 </head>
@@ -143,8 +161,10 @@
 
 <h1>7Exporter File Exporter</h1>
 
-<button id="addFileBtn">Add New File</button>
-<button id="exportBtn">Export Files</button>
+<div style="text-align:center;">
+  <button id="addFileBtn">Add New File</button>
+  <button id="exportBtn">Export Files</button>
+</div>
 
 <div class="file-list" id="fileList"></div>
 
@@ -153,11 +173,11 @@
 <div id="export-popup">
   <h2>Export Options</h2>
   <label>
-    <span>File as ZIP</span>
+    <span>Export as ZIP</span>
     <input type="checkbox" id="zipSwitch" checked />
   </label>
   <button id="doExportBtn">Download</button>
-  <button id="cancelExportBtn" style="margin-left:10px;">Cancel</button>
+  <button id="cancelExportBtn">Cancel</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
@@ -179,7 +199,6 @@
     container.className = 'file-item';
     container.dataset.id = file.id;
 
-    // Header (filename input + remove btn + toggle btn)
     const header = document.createElement('div');
     header.className = 'file-header';
 
@@ -192,6 +211,16 @@
       checkExportButton();
     });
 
+    const toggleIcon = document.createElement('span');
+    toggleIcon.className = 'toggle-icon';
+    toggleIcon.textContent = '▶';
+
+    header.addEventListener('click', () => {
+      const contentArea = container.querySelector('.file-content');
+      const isOpen = contentArea.classList.toggle('open');
+      toggleIcon.classList.toggle('rotate', isOpen);
+    });
+
     const removeBtn = document.createElement('button');
     removeBtn.textContent = 'Remove';
     removeBtn.className = 'remove-btn';
@@ -202,23 +231,10 @@
       checkExportButton();
     });
 
-    const toggleBtn = document.createElement('button');
-    toggleBtn.className = 'toggle-btn';
-    toggleBtn.textContent = '▶';
-    toggleBtn.title = 'Expand/Collapse code editor';
-    toggleBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      const contentArea = container.querySelector('.file-content');
-      const isVisible = contentArea.style.display === 'block';
-      contentArea.style.display = isVisible ? 'none' : 'block';
-      toggleBtn.textContent = isVisible ? '▶' : '▼';
-    });
-
     header.appendChild(filenameInput);
     header.appendChild(removeBtn);
-    header.appendChild(toggleBtn);
+    header.appendChild(toggleIcon);
 
-    // Content area (textarea)
     const contentArea = document.createElement('div');
     contentArea.className = 'file-content';
 
